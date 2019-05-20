@@ -39,6 +39,7 @@ public:
     bool move_enemy_start(int pos, int dice);
     bool is_home(int pos);
     void clear_vector();
+    int make_aggressive_decision();
 
 signals:
     void select_piece(int);

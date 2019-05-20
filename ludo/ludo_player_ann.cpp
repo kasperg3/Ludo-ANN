@@ -38,7 +38,7 @@ int ludo_player_ann::make_decision(){
 void ludo_player_ann::start_turn(positions_and_dice relative){
     pos_start_of_turn = relative.pos;
     dice_roll = relative.dice;
-    int decision = make_decision();
+    int decision = make_aggressive_decision();
     for(int i = 0; i < 4; i++)
     {
         input.push_back(is_on_home_stretch(pos_start_of_turn.at(i)));
@@ -345,5 +345,44 @@ void ludo_player_ann::clear_vector()
 }
 
 int ludo_player_ann::make_aggressive_decision(){
+
+    if(dice_roll == 6){//Prioritize to move one out
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i]<0){
+                return i;
+            }
+        }
+    }
+    for(int i = 0; i < 4; ++i){ //If not able to move one out, then try to beat someone
+        if(can_kill_enemy(dice_roll,i)){
+            return i;
+        }
+    }
+    int closestMove = 1000;
+    int indexClosest = 0;
+    for(int i = 0; i < 4; ++i){
+
+        for(int j = 4; j < pos_start_of_turn.size();++j){
+            if((abs((pos_start_of_turn[i]+dice_roll)-pos_start_of_turn[j])) < closestMove  && ((pos_start_of_turn[i]+dice_roll)-pos_start_of_turn[j]) < 0){
+                closestMove = abs((pos_start_of_turn[i]+dice_roll)-pos_start_of_turn[j]);
+                indexClosest = i;
+            }
+        }
+    }
+    if(pos_start_of_turn[indexClosest]>=0 && pos_start_of_turn[indexClosest] != 99){
+        return indexClosest;
+    }
+
+    for(int i = 0; i < 4; ++i){
+        if(pos_start_of_turn[i]>=0 && pos_start_of_turn[i] != 99){
+            return i;
+        }
+    }
+    for(int i = 0; i < 4; ++i){ //maybe they are all locked in
+        if(pos_start_of_turn[i]<0){
+            return i;
+        }
+    }
+    return -1;
 
 }
