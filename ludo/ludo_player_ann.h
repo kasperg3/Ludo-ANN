@@ -3,6 +3,7 @@
 #include <QObject>
 #include <iostream>
 #include "positions_and_dice.h"
+#include <random>
 
 class ludo_player_ann : public QObject {
     Q_OBJECT
@@ -14,6 +15,8 @@ private:
     std::vector<int> input;
     std::vector<int> output;
     int player_type;
+    std::random_device rd;
+    std::mt19937 gen;
 public:
     ludo_player_ann();
     ludo_player_ann(int playerType);
@@ -28,7 +31,7 @@ public:
     bool is_enemy_start(int pos);
     bool can_complete(int pos, int dice);
     bool is_complete(int pos);
-    bool move_out_home(int pos, int dice);
+    bool move_out_home(int token_index, int dice);
     bool is_global_safe(int token_index, int dice = 0);
     bool move_global_safe(int pos, int dice);
     bool move_star(int pos, int dice);
@@ -43,6 +46,7 @@ public:
     void clear_vector();
     int make_aggressive_decision();
     int make_defensive_decision();
+    int make_random_decision();
 
 
 signals:

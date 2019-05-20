@@ -20,6 +20,33 @@ ludo_player_ann::ludo_player_ann(int playerType):
     player_type = playerType;
 }
 
+
+int ludo_player_ann::make_random_decision(){
+    std::vector<int> valid_moves;
+    if(dice_roll == 6){
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i]<0){
+                valid_moves.push_back(i);
+            }
+        }
+    }
+    for(int i = 0; i < 4; ++i){
+        if(pos_start_of_turn[i]>=0 && pos_start_of_turn[i] != 99){
+            valid_moves.push_back(i);
+        }
+    }
+    if(valid_moves.size()==0){
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i] != 99){
+                valid_moves.push_back(i);
+            }
+        }
+    }
+    std::uniform_int_distribution<> piece(0, valid_moves.size()-1);
+    int select = piece(gen);
+    return valid_moves[select];
+}
+
 int ludo_player_ann::make_decision(){
     if(dice_roll == 6){
         for(int i = 0; i < 4; ++i){
@@ -57,13 +84,13 @@ int ludo_player_ann::make_defensive_decision()
             }
         }
         for(int i = 0; i < 4; ++i){
-            if(move_global_safe(pos_start_of_turn[i],dice_roll)){
+            if(move_global_safe(i,dice_roll) && pos_start_of_turn[i] != 99){
                 return i;
             }
         }
         for(int i = 0; i < 4; ++i)
         {
-            if(move_local_safe(pos_start_of_turn[i],dice_roll))
+            if(move_local_safe(pos_start_of_turn[i],dice_roll) && pos_start_of_turn[i] != 99)
             {
                 return i;
             }
@@ -76,13 +103,13 @@ int ludo_player_ann::make_defensive_decision()
     }
     else {
         for(int i = 0; i < 4; ++i){
-            if(move_global_safe(pos_start_of_turn[i],dice_roll)){
+            if(move_global_safe(i,dice_roll) && pos_start_of_turn[i] != 99){
                 return i;
             }
         }
         for(int i = 0; i < 4; ++i)
         {
-            if(move_local_safe(pos_start_of_turn[i],dice_roll))
+            if(move_local_safe(pos_start_of_turn[i],dice_roll) && pos_start_of_turn[i] != 99)
             {
                 return i;
             }
@@ -108,10 +135,12 @@ void ludo_player_ann::start_turn(positions_and_dice relative){
     int decision;
     if(player_type == AGGRESIVE)
         decision = make_aggressive_decision(); //make aggo
-    if(player_type == DEFENSIVE)
+    else if(player_type == DEFENSIVE)
         decision = make_defensive_decision(); //make pacifist
-    if(player_type == RANDOM)
-        decision = make_decision();
+    else if(player_type == RANDOM)
+        decision = make_random_decision();
+    else
+        make_decision();
     for(int i = 0; i < 4; i++)
     {
         input.push_back(is_on_home_stretch(pos_start_of_turn.at(i)));
