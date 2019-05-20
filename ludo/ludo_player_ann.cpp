@@ -1,9 +1,6 @@
 #include "ludo_player_ann.h"
 #include <random>
 
-#define RANDOM 0
-#define AGGRESIVE 1
-#define DEFENSIVE 2
 
 ludo_player_ann::ludo_player_ann():
     pos_start_of_turn(16),

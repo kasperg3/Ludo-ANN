@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = ludo
 TEMPLATE = app
 
+LIBS += -L/usr/local/lib -lfann
 
 SOURCES += main.cpp\
         dialog.cpp \

@@ -5,7 +5,6 @@
 #include "positions_and_dice.h"
 #include <random>
 
-
 #define RANDOM 0
 #define AGGRESIVE 1
 #define DEFENSIVE 2
