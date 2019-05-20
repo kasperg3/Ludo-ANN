@@ -13,8 +13,10 @@ private:
     int make_decision();
     std::vector<int> input;
     std::vector<int> output;
+    int player_type;
 public:
     ludo_player_ann();
+    ludo_player_ann(int playerType);
 
     //States
     bool is_on_home_stretch(int);
@@ -40,6 +42,8 @@ public:
     bool is_home(int pos);
     void clear_vector();
     int make_aggressive_decision();
+    int make_defensive_decision();
+
 
 signals:
     void select_piece(int);
