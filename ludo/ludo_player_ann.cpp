@@ -2,6 +2,7 @@
 #include <random>
 
 
+
 ludo_player_ann::ludo_player_ann():
     pos_start_of_turn(16),
     pos_end_of_turn(16),
@@ -127,6 +128,90 @@ int ludo_player_ann::make_defensive_decision()
     return -1;
 }
 
+std::vector < int > ludo_player_ann::sorted_index(fann_type* calc_out){
+  double fourth_largest = 90;
+  double third_largest = 0;
+  double second_largest = 0;
+  double largest = 0;
+  int fourth_largest_index = -99;
+  int third_largest_index = -99;
+  int second_largest_index = -99;
+  int largest_index = -99;
+  //Finding Largest
+  for (int i = 0; i < 4; ++i)
+    if (calc_out[i]>largest){
+      largest = calc_out[i];
+      largest_index = i;
+    }
+  //finding second largset
+  for (int i = 0; i < 4; ++i)
+   if (calc_out[i]>second_largest){
+      if (calc_out[i] == largest)
+            continue;
+      second_largest = calc_out[i];
+      second_largest_index = i;
+   }
+  //finding third largset
+  for (int i = 0; i < 4; ++i)
+   if (calc_out[i]>third_largest){
+      if (calc_out[i] == largest || calc_out[i] == second_largest)
+            continue;
+      third_largest = calc_out[i];
+      third_largest_index = i;
+   }
+  //finding fourth largset
+  for (int i = 0; i < 4; ++i){
+    if ( calc_out[i] < fourth_largest ){
+      fourth_largest = calc_out[i];
+      fourth_largest_index = i;
+    }
+  }
+
+   return std::vector<int>{largest_index,second_largest_index,third_largest_index,fourth_largest_index};
+}
+
+
+int ludo_player_ann::make_ann_decision(){
+    fann_type *calc_out;
+    struct fann *ann = fann_create_from_file(TRAINED_NETWORK_PATH);
+    fann_type ann_input[56];
+
+
+    for(int i = 0; i < 4; i++)
+    {
+        ann_input[0+(i*14)] = is_on_home_stretch(pos_start_of_turn.at(i));
+        ann_input[1+(i*14)] = can_move_to_home_stretch(pos_start_of_turn.at(i),dice_roll);
+        ann_input[2+(i*14)] = can_kill_enemy(dice_roll,i);
+        ann_input[3+(i*14)] = move_star(pos_start_of_turn.at(i),dice_roll);
+        ann_input[4+(i*14)] = can_complete(pos_start_of_turn.at(i),dice_roll);
+        ann_input[5+(i*14)] = is_complete(pos_start_of_turn.at(i));
+        ann_input[6+(i*14)] = move_out_home(pos_start_of_turn.at(i),dice_roll);
+        ann_input[7+(i*14)] = is_global_safe(i);
+        ann_input[8+(i*14)] = move_global_safe(i,dice_roll);
+        ann_input[9+(i*14)] = is_local_safe(pos_start_of_turn.at(i));
+        ann_input[10+(i*14)] = move_local_safe(pos_start_of_turn.at(i),dice_roll);
+        ann_input[11+(i*14)] = is_enemy_start(pos_start_of_turn.at(i));
+        ann_input[12+(i*14)] = move_enemy_start(pos_start_of_turn.at(i),dice_roll);
+        ann_input[13+(i*14)] = is_home(pos_start_of_turn.at(i));
+    }
+
+    calc_out = fann_run(ann, ann_input);
+
+    std::vector<int> indx_Sorted = sorted_index(calc_out);
+
+
+    for(int i = 0; i < 4 ; i++){
+        if(pos_start_of_turn[i] != 99){
+            if(pos_start_of_turn[i] >=0 && dice_roll != 6)
+                return indx_Sorted[i];
+        }
+    }
+
+    fann_destroy(ann);
+
+    return 1;
+}
+
 
 void ludo_player_ann::start_turn(positions_and_dice relative){
     pos_start_of_turn = relative.pos;
@@ -138,8 +223,11 @@ void ludo_player_ann::start_turn(positions_and_dice relative){
         decision = make_defensive_decision(); //make pacifist
     else if(player_type == RANDOM)
         decision = make_random_decision();
-    else
+    else if(player_type == NORMAL)
         decision = make_decision();
+    else if(player_type == ANN)
+        decision = make_ann_decision();
+
     for(int i = 0; i < 4; i++)
     {
         input.push_back(is_on_home_stretch(pos_start_of_turn.at(i)));

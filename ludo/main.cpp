@@ -9,13 +9,15 @@
 #include <fstream>
 #include "fann.h"
 
+
+
 Q_DECLARE_METATYPE( positions_and_dice )
 
 void log_training_data(game &g,  QApplication &a, ludo_player_ann &p1, ludo_player_ann &p2, ludo_player_ann &p3, ludo_player_ann &p4 ){
 
     int in_out_sets = 0;
 
-    std::ofstream ofs ("/home/kasper/qtworkspace/Ludo/data.data", std::ofstream::out);
+    std::ofstream ofs ("/home/kasper/qtworkspace/Ludo/validate10Games.data", std::ofstream::out);
 
 
     for(int j = 0; j < 10; ++j){
@@ -120,7 +122,7 @@ void train_network(){
         printf("Creating network.\n");
         ann = fann_create_standard(num_layers, num_input, num_neurons_hidden, num_output);
 
-        data = fann_read_train_from_file("/home/kasper/qtworkspace/Ludo/data.data");
+        data = fann_read_train_from_file(TRAINING_DATA);
 
         fann_set_activation_steepness_hidden(ann, 1);
         fann_set_activation_steepness_output(ann, 1);
@@ -146,36 +148,71 @@ void train_network(){
 
         printf("Saving network.\n");
 
-        fann_save(ann, "/home/kasper/qtworkspace/Ludo/10games.net");
-
-        decimal_point = fann_save_to_fixed(ann, "/home/kasper/qtworkspace/Ludo/10games.net");
-        fann_save_train_to_fixed(data, "/home/kasper/qtworkspace/Ludo/10games.data", decimal_point);
+        fann_save(ann, TRAINED_NETWORK_PATH);
 
         printf("Cleaning up.\n");
         fann_destroy_train(data);
         fann_destroy(ann);
 
 }
+int test_network(){
+    fann_type *calc_out;
+        unsigned int i;
+        int ret = 0;
+
+        struct fann *ann;
+        struct fann_train_data *data;
+
+        printf("Creating network.\n");
+
+        ann = fann_create_from_file(TRAINED_NETWORK_PATH);
+
+        if(!ann)
+        {
+            printf("Error creating ann --- ABORTING.\n");
+            return -1;
+        }
+
+        fann_print_connections(ann);
+        fann_print_parameters(ann);
+
+        data = fann_read_train_from_file(VALIDATION_DATA); //Validation data
+
+        for(i = 0; i < fann_length_train_data(data); i++) {
+                fann_reset_MSE(ann);
+                calc_out = fann_test(ann, data->input[i], data->output[i]);
+                std::cout << "validation " << i << ": " << (float) fann_abs(calc_out[0] - data->output[i][0]) << std::endl;
+        }
+
+        fann_reset_MSE(ann);
+        std::cout << "Validation on whole set: " << fann_test_data(ann, data) << std::endl;
+
+        printf("Cleaning up.\n");
+        fann_destroy_train(data);
+        fann_destroy(ann);
+
+        return ret;
+}
+
 
 int main(int argc, char *argv[]){
     QApplication a(argc, argv);
     qRegisterMetaType<positions_and_dice>();
 
     //instanciate the players here
-    ludo_player_ann p1, p2(0), p3(1), p4(2);
+    ludo_player_ann p1(4), p2(0), p3(1), p4(2);
 
     game g;
-    g.setGameDelay(0); //if you want to see the game, set a delay
+    g.setGameDelay(100); //if you want to see the game, set a delay
 
     // Add a GUI <-- remove the '/' to uncomment block
-//    Dialog w;
-//    QObject::connect(&g,SIGNAL(update_graphics(std::vector<int>)),&w,SLOT(update_graphics(std::vector<int>)));
-//    QObject::connect(&g,SIGNAL(set_color(int)),                   &w,SLOT(get_color(int)));
-//    QObject::connect(&g,SIGNAL(set_dice_result(int)),             &w,SLOT(get_dice_result(int)));
-//    QObject::connect(&g,SIGNAL(declare_winner(int)),              &w,SLOT(get_winner()));
-//    QObject::connect(&g,SIGNAL(close()),&a,SLOT(quit()));
-//    w.show();
-
+    Dialog w;
+    QObject::connect(&g,SIGNAL(update_graphics(std::vector<int>)),&w,SLOT(update_graphics(std::vector<int>)));
+    QObject::connect(&g,SIGNAL(set_color(int)),                   &w,SLOT(get_color(int)));
+    QObject::connect(&g,SIGNAL(set_dice_result(int)),             &w,SLOT(get_dice_result(int)));
+    QObject::connect(&g,SIGNAL(declare_winner(int)),              &w,SLOT(get_winner()));
+    QObject::connect(&g,SIGNAL(close()),&a,SLOT(quit()));
+    w.show();
 
     QObject::connect(&g,SIGNAL(close()),&a,SLOT(quit()));
 
@@ -201,25 +238,25 @@ int main(int argc, char *argv[]){
     QObject::connect(&p4,SIGNAL(turn_complete(bool)),              &g, SLOT(turnComplete(bool)));
 
 
-//    int winnerArray[4] = {0,0,0,0};
-//    for(int j = 0; j < 10000; ++j){
-//        g.start();
-//        a.exec();
-//        g.reset();
-//        int winner = g.get_winner();
+    int winnerArray[4] = {0,0,0,0};
+    for(int j = 0; j < 1000; ++j){
+        g.start();
+        a.exec();
+        g.reset();
+        int winner = g.get_winner();
 
-//        winnerArray[winner] += 1;
+        winnerArray[winner] += 1;
 
-//        while (a.closingDown());
-//        g.reset();
-//        if(g.wait());
-//    }
+        while (a.closingDown());
+        g.reset();
+        if(g.wait());
+    }
 
-//    std::cout << "wins:" <<  winnerArray[0] << ", "<<  winnerArray[1] << ", "<<  winnerArray[2] << ", "<<  winnerArray[3];
+    std::cout << "wins:" <<  winnerArray[0] << ", "<<  winnerArray[1] << ", "<<  winnerArray[2] << ", "<<  winnerArray[3];
 
     //log_training_data(g,a,p1,p2,p3,p4);
 
-    train_network();
-
+    //train_network();
+    //test_network();
     return 0;
 }

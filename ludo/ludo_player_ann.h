@@ -4,10 +4,17 @@
 #include <iostream>
 #include "positions_and_dice.h"
 #include <random>
+#include "fann.h"
 
 #define RANDOM 0
 #define AGGRESIVE 1
 #define DEFENSIVE 2
+#define NORMAL 3
+#define ANN 4
+
+#define TRAINING_DATA "/home/kasper/qtworkspace/Ludo/10gamesTrain.data"
+#define TRAINED_NETWORK_PATH "/home/kasper/qtworkspace/Ludo/10games.net"
+#define VALIDATION_DATA "/home/kasper/qtworkspace/Ludo/validate10Games.data"
 
 class ludo_player_ann : public QObject {
     Q_OBJECT
@@ -51,7 +58,9 @@ public:
     int make_aggressive_decision();
     int make_defensive_decision();
     int make_random_decision();
+    int make_ann_decision();
 
+    std::vector<int> sorted_index(fann_type* calc_out);
 
 signals:
     void select_piece(int);
