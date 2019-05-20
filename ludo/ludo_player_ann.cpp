@@ -1,11 +1,23 @@
 #include "ludo_player_ann.h"
 #include <random>
 
+#define RANDOM 0
+#define AGGRESIVE 1
+#define DEFENSIVE 2
+
 ludo_player_ann::ludo_player_ann():
     pos_start_of_turn(16),
     pos_end_of_turn(16),
     dice_roll(0)
 {
+}
+
+ludo_player_ann::ludo_player_ann(int playerType):
+    pos_start_of_turn(16),
+    pos_end_of_turn(16),
+    dice_roll(0)
+{
+    player_type = playerType;
 }
 
 int ludo_player_ann::make_decision(){
@@ -35,10 +47,71 @@ int ludo_player_ann::make_decision(){
     return -1;
 }
 
+int ludo_player_ann::make_defensive_decision()
+{
+    if(dice_roll == 6)
+    {
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i]<0){
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i){
+            if(move_global_safe(pos_start_of_turn[i],dice_roll)){
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i)
+        {
+            if(move_local_safe(pos_start_of_turn[i],dice_roll))
+            {
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i]>=0 && pos_start_of_turn[i] != 99){
+                return i;
+            }
+        }
+    }
+    else {
+        for(int i = 0; i < 4; ++i){
+            if(move_global_safe(pos_start_of_turn[i],dice_roll)){
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i)
+        {
+            if(move_local_safe(pos_start_of_turn[i],dice_roll))
+            {
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i){
+            if(pos_start_of_turn[i]>=0 && pos_start_of_turn[i] != 99){
+                return i;
+            }
+        }
+        for(int i = 0; i < 4; ++i){ //maybe they are all locked in
+            if(pos_start_of_turn[i]<0){
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+
 void ludo_player_ann::start_turn(positions_and_dice relative){
     pos_start_of_turn = relative.pos;
     dice_roll = relative.dice;
-    int decision = make_aggressive_decision();
+    int decision;
+    if(player_type == AGGRESIVE)
+        decision = make_aggressive_decision(); //make aggo
+    if(player_type == DEFENSIVE)
+        decision = make_defensive_decision(); //make pacifist
+    if(player_type == RANDOM)
+        decision = make_decision();
     for(int i = 0; i < 4; i++)
     {
         input.push_back(is_on_home_stretch(pos_start_of_turn.at(i)));
