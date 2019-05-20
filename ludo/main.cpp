@@ -143,6 +143,23 @@ int main(int argc, char *argv[]){
     QObject::connect(&g, SIGNAL(player4_end(std::vector<int>)),    &p4,SLOT(post_game_analysis(std::vector<int>)));
     QObject::connect(&p4,SIGNAL(turn_complete(bool)),              &g, SLOT(turnComplete(bool)));
 
+
+    int winnerArray[4] = {0,0,0,0};
+    for(int j = 0; j < 10000; ++j){
+        g.start();
+        a.exec();
+        g.reset();
+        int winner = g.get_winner();
+
+        winnerArray[winner] += 1;
+
+        while (a.closingDown());
+        g.reset();
+        if(g.wait());
+    }
+
+    std::cout << "wins:" <<  winnerArray[0] << ", "<<  winnerArray[1] << ", "<<  winnerArray[2] << ", "<<  winnerArray[3];
+
     log_training_data(g,a,p1,p2,p3,p4);
 
     return 0;
