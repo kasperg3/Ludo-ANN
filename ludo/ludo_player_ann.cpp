@@ -8,7 +8,9 @@
 ludo_player_ann::ludo_player_ann():
     pos_start_of_turn(16),
     pos_end_of_turn(16),
-    dice_roll(0)
+    dice_roll(0),
+    rd(),
+    gen(rd())
 {
 }
 
@@ -140,7 +142,7 @@ void ludo_player_ann::start_turn(positions_and_dice relative){
     else if(player_type == RANDOM)
         decision = make_random_decision();
     else
-        make_decision();
+        decision = make_decision();
     for(int i = 0; i < 4; i++)
     {
         input.push_back(is_on_home_stretch(pos_start_of_turn.at(i)));
