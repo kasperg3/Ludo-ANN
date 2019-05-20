@@ -219,6 +219,9 @@ bool ludo_player_ann::is_globe(int pos)
 
 bool ludo_player_ann::is_global_safe(int token_index, int dice)
 {
+    if( pos_start_of_turn[token_index] < 0)
+        return 0;
+
     if(is_globe(pos_start_of_turn.at(token_index)+dice))
         return true;
 
@@ -229,7 +232,7 @@ bool ludo_player_ann::is_global_safe(int token_index, int dice)
     {
         if(i != token_index)
         {
-           if(pos_start_of_turn.at(token_index)+dice == pos_start_of_turn.at(i))
+           if(pos_start_of_turn.at(token_index)+dice == pos_start_of_turn.at(i) && pos_start_of_turn[i] != 99)
                return true;
         }
     }
